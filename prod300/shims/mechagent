@@ -1,0 +1,7 @@
+#!/bin/bash
+# Agent-side mechagent: refuses the subcommands that run campaign passes or submit; use `act` for changes.
+case "$1 $2" in
+  "reactra status"|"reactra watch"|"reactra adopt"|"reactra submit"|"reactra init")
+    echo "refused in prod300: 'mechagent $1 $2' runs passes or changes the campaign. Use: act status | act relaunch | act submit"; exit 3 ;;
+esac
+exec /lus/flare/projects/FRAME-IDP/fkunnath/ma/venv/bin/mechagent "$@"

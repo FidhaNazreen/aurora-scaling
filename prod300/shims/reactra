@@ -1,0 +1,4 @@
+#!/bin/bash
+# Agent-side reactra: `campaign` (passes, retries, submissions) is the driver's and act's; everything else passes through.
+[ "$1" = campaign ] && { echo "refused in prod300: the driver runs campaign passes; use act retry RUN"; exit 3; }
+exec /lus/flare/projects/FRAME-IDP/fkunnath/ma/venv/bin/reactra "$@"

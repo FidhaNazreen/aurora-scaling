@@ -1,0 +1,62 @@
+#!/bin/bash
+# act: an agent's only way to change its case in the shared pack256 campaigns. Run from agents/ACC (the agent's cwd).
+#   act status                      the case's runs, their next actions, caps used
+#   act relaunch NAME 'WHY'         copy the case's run inputs to a new variant runs/RUN-NAME; then edit its run.yaml
+#   act submit NAME                 validate that variant and add it to the group campaign (under the group lock)
+#   act retry RUN                   retry one of the case's ended or stalled runs (Reactra --retry, under the group lock)
+#   act checkpoint --question Q --next-action N [--note T]
+# Caps per case: 2 relaunches, 3 retries. Changes need .can-act (set by the dispatcher while pilot time remains).
+MA=/lus/flare/projects/FRAME-IDP/fkunnath/ma; D=$MA/pack256; R=$D/bin/reactra
+C=$(pwd -P); ACC=$(basename "$C"); [ "$(dirname "$C")" = "$D/agents" ] || { echo "act: run me from your pack256 agents/ACC folder"; exit 2; }
+read G RUN < <(python3 -c "import json,sys; i=json.load(open('$D/index.json'))[sys.argv[1]]; print(i['group'], i['run'])" "$ACC") || exit 2
+GD=$D/groups/$G; CF=$GD/campaign.yaml; LOCK=$GD/.lock
+note() { echo -e "$(date -u +%FT%TZ)\t$ACC\t$*" >> $D/logs/actions.tsv; }
+need_act() { [ -e $C/.can-act ] || { echo "act: actions are disabled now (no pilot time left to run them)"; exit 3; }; }
+mine() { [[ "$1" == "$RUN" || "$1" == "$RUN"-* ]] || { echo "act: $1 is not one of this case's runs"; exit 2; }; }
+case "${1:-}" in
+  status)
+    for s in "$GD"/summary/"$RUN"*.json; do [ -e "$s" ] && python3 -c "import json,sys; j=json.load(open(sys.argv[1])); print(sys.argv[1].split('/')[-1][:-5], j.get('state'), 'next:', j.get('next_stage'), 'action:', json.dumps(j.get('next_action')))" "$s"; done
+    ls -d "$GD"/runs/"$RUN"-* 2>/dev/null | sed 's#.*/#variant folder: #'
+    echo "relaunches used: $(ls $C/relaunch-* 2>/dev/null | wc -l)/2  retries used: $(ls $C/retry-* 2>/dev/null | wc -l)/3" ;;
+  relaunch)
+    need_act; NAME=${2:?act relaunch NAME WHY}; WHY=${3:?act relaunch NAME WHY}
+    [[ "$NAME" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "act: NAME is lowercase letters, digits and hyphens"; exit 2; }
+    [ "$(ls $C/relaunch-* 2>/dev/null | wc -l)" -lt 2 ] || { echo "act: this case has used its 2 relaunches"; exit 3; }
+    V=$GD/runs/$RUN-$NAME; [ -e "$V" ] && { echo "act: $V exists"; exit 2; }
+    mkdir -p "$V" && cp "$GD/runs/$RUN"/*.{yaml,mech,cif} "$V"/ 2>/dev/null
+    printf '%s\n' "$WHY" > "$C/relaunch-$NAME"; note "relaunch\t$NAME\t$WHY"
+    echo "created $V/run.yaml: make one evidence-backed change, then: act submit $NAME" ;;
+  submit)
+    need_act; NAME=${2:?act submit NAME}; V=$GD/runs/$RUN-$NAME
+    [ -e "$C/relaunch-$NAME" ] && [ -f "$V/run.yaml" ] || { echo "act: no relaunched variant $NAME (act relaunch first)"; exit 2; }
+    grep -q "runs/$RUN-$NAME/run.yaml" "$CF" && { echo "act: $NAME is already in the campaign"; exit 0; }
+    timeout 300 $R validate --offline "$V/run.yaml" >/tmp/act-$$ 2>&1 || { echo "act: run.yaml fails validation:"; tail -15 /tmp/act-$$; rm -f /tmp/act-$$; exit 1; }; rm -f /tmp/act-$$
+    WHY=$(head -1 "$C/relaunch-$NAME" | tr -d '"\\')
+    ( flock -w 600 9 || exit 4
+      python3 - "$CF" "$RUN-$NAME" "$ACC" "$WHY" <<'EOF'
+import sys
+cf, name, acc, why = sys.argv[1:]
+t = open(cf).read(); i = t.index("archive:")
+entry = f'- file: runs/{name}/run.yaml\n  variant_of: {acc}\n  hypothesis: "{why}"\n'
+open(cf, "w").write(t[:i] + entry + t[i:])
+EOF
+    ) 9>"$LOCK"; rc=$?; note "submit\t$NAME\trc=$rc"
+    [ $rc = 0 ] && echo "added $RUN-$NAME to $G: the next pass (within 5 min) queues it"; exit $rc ;;
+  retry)
+    need_act; X=${2:?act retry RUN}; mine "$X"
+    [ "$(ls $C/retry-* 2>/dev/null | wc -l)" -lt 3 ] || { echo "act: this case has used its 3 retries"; exit 3; }
+    date -u +%FT%TZ > "$C/retry-$(date +%s)-$X"
+    ( flock -w 900 9 || exit 4; cd "$GD" && timeout 900 $R campaign "$CF" --retry "$X" 2>&1 | tail -15; exit ${PIPESTATUS[0]} ) 9>"$LOCK"
+    rc=$?; note "retry\t$X\trc=$rc"; exit $rc ;;
+  checkpoint)
+    shift; python3 - "$C" "$@" <<'EOF'
+import argparse, json, sys, time
+c = sys.argv[1]; ap = argparse.ArgumentParser(prog="act checkpoint")
+ap.add_argument("--question", required=True); ap.add_argument("--next-action", required=True); ap.add_argument("--note", default="")
+a = ap.parse_args(sys.argv[2:]); p = f"{c}/checkpoint-{int(time.time())}.json"
+json.dump({"at": time.strftime("%FT%TZ", time.gmtime()), "question": a.question, "next_action": a.next_action, "note": a.note}, open(p, "w"), indent=1)
+print("recorded", p)
+EOF
+    rc=$?; note "checkpoint\trc=$rc"; exit $rc ;;
+  *) sed -n 2,8p "$0"; exit 2 ;;
+esac

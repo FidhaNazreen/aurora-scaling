@@ -1,0 +1,255 @@
+<title>Aurora Prod300 Agent Run</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 50rem reading column (same family as the scale250 and drive250 reports); charts and the case table sit in their own boxes. */
+:root{
+  --bg:#f6f7f8; --surface:#ffffff; --fg:#17202a; --muted:#5b6672; --line:#d9dee3; --grid:#e8ecef;
+  --accent:#0f6e8c; --warn:#a15c00; --warn-soft:#fbeed9; --bad:#b0302a; --good:#2f7d4a;
+  --s1:#2a78d6; --s2:#eb6834;
+  --o-conv:#2f7d4a; --o-diag:#c98500; --o-unf:#9aa5b0; --o-none:#c0423b;
+  --display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#11161b; --surface:#182028; --fg:#e4e9ee; --muted:#97a3ae; --line:#2b3640; --grid:#222c35;
+  --accent:#5bb8d6; --warn:#e3a54a; --warn-soft:#3a2c17; --bad:#ec7a72; --good:#6cc28a;
+  --s1:#3987e5; --s2:#d95926;
+  --o-conv:#4fa86c; --o-diag:#c98500; --o-unf:#5d6976; --o-none:#d55a52; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#11161b; --surface:#182028; --fg:#e4e9ee; --muted:#97a3ae; --line:#2b3640; --grid:#222c35;
+  --accent:#5bb8d6; --warn:#e3a54a; --warn-soft:#3a2c17; --bad:#ec7a72; --good:#6cc28a;
+  --s1:#3987e5; --s2:#d95926;
+  --o-conv:#4fa86c; --o-diag:#c98500; --o-unf:#5d6976; --o-none:#d55a52; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:15px/1.6 var(--body);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:40px 72px}
+main{max-width:50rem;margin:0 auto;display:grid;gap:40px}
+section{display:grid;gap:14px;min-width:0}
+h1,h2,h3{font-family:var(--display);font-weight:600;text-wrap:balance;line-height:1.15;margin:0}
+h1{font-size:2.1rem}
+h2{font-size:1.35rem;padding-top:8px;border-top:1px solid var(--line)}
+h3{font-size:1rem}
+p,ul{margin:0}
+ul{padding-left:1.2em;display:grid;gap:6px}
+.eyebrow{font:500 .75rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.lede{font-size:1.05rem}
+code{font-family:var(--mono);font-size:.86em}
+.meta{font:.82rem var(--mono);color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.fact{background:var(--surface);padding:14px 16px;display:grid;gap:2px;align-content:start}
+.fact b{font:600 1.5rem var(--display);font-variant-numeric:tabular-nums}
+.fact span{color:var(--muted);font-size:.84rem;line-height:1.35}
+.scroll{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:.86rem;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:6px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;color:var(--muted);font-size:.76rem;letter-spacing:.04em;text-transform:uppercase}
+td.n,th.n{text-align:right;white-space:nowrap}
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:12px 14px;border-radius:0 6px 6px 0;display:grid;gap:6px}
+a{color:var(--accent)}
+/* outcome bar */
+.obar{display:flex;gap:2px;height:34px;border-radius:4px;overflow:hidden}
+.obar div{min-width:0}
+.olegend{display:grid;grid-template-columns:repeat(auto-fit,minmax(11rem,1fr));gap:10px 18px}
+.olegend div{display:grid;grid-template-columns:12px 1fr;gap:2px 8px;align-items:baseline}
+.sw{width:12px;height:12px;border-radius:3px;display:inline-block;transform:translateY(1px)}
+.olegend b{font:600 1.15rem var(--display);font-variant-numeric:tabular-nums}
+.olegend span.d{grid-column:2;color:var(--muted);font-size:.82rem;line-height:1.35}
+/* charts */
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 14px 8px;display:grid;gap:8px;position:relative;min-width:0}
+.chart .hd{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 16px;align-items:baseline}
+.chart .sub{color:var(--muted);font-size:.82rem}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.8rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+svg.c{width:100%;height:auto;display:block;overflow:visible}
+svg.c text{fill:var(--muted);font:14px var(--mono)}
+.tip{position:absolute;pointer-events:none;background:var(--fg);color:var(--bg);font:12px/1.45 var(--mono);padding:6px 8px;border-radius:4px;white-space:nowrap;transform:translate(-50%,-100%);z-index:2}
+.tip[hidden]{display:none!important}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(20rem,1fr));gap:14px}
+/* case table */
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.filters button{font:500 .8rem var(--body);border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:4px 12px;cursor:pointer}
+.filters button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.filters button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.pill{font:500 .74rem var(--body);padding:1px 8px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.p-converged{color:var(--good)} .p-diagnostic{color:var(--warn)} .p-unfinished{color:var(--muted)} .p-none{color:var(--bad)}
+.tablebox{max-height:28rem;overflow:auto;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.tablebox th{position:sticky;top:0;background:var(--surface)}
+@media (prefers-reduced-motion:no-preference){.obar div{transition:flex-grow .3s}}
+</style>
+
+<main>
+<header style="display:grid;gap:12px">
+  <div class="eyebrow">MechanismAtlas · Reactra on Aurora · prod queue</div>
+  <h1>Aurora Prod300 Agent Run</h1>
+  <p class="lede">300 chorismate mutase cases ran in one 12-hour prod pilot, each driven by its own Codex SDK agent on its compute node. A 256-node pilot queued as a backup started 2 h before the end and took over the waiting work. 85 cases reached a converged mechanism and 82 more finished with a diagnostic barrier. Every one of the 4,274 agent turns completed. The node and GPU numbers below describe this test's setup, not Reactra's production throughput: see the note.</p>
+  <div class="meta"><span>PBS 9105759 (300 nodes) + 9108129 (256 nodes)</span><span>2026-11-22 19:26 – 11-23 10:58 UTC</span><span>queue prod → small</span><span>model muse-spark-bf16 (ALCF)</span><span>store <code>$MA/prod300</code></span></div>
+</header>
+
+<section class="note" aria-label="How to read the utilization numbers">
+  <b>How to read the utilization numbers</b>
+  <p>This run was set up as one case per node: each of the 300 cases was its own Reactra campaign with one run, on a site with <code>nodes_per_job: 1</code>, and each case's agent ran on its own GPU node. Reactra already packs up to 12 light-stage runs onto one node, but only within a campaign; with one run per campaign it had nothing to pack, so every light stage held a whole 12-tile node. The release, <code>golden-2026-11-17j</code> (Reactra <code>64b98b4</code>, 17 Nov), was also a few days behind the latest packing improvements (18–21 Nov) and the reactra-hpc fleet runtime, but those were refinements: the one-case-per-campaign setup was the main cause. In production, with runs packed onto shared nodes, Reactra reaches 99.8% node occupancy and 94–96% GPU tile utilization on Aurora. The agent results stand; the node limit and the 45% GPU figure are effects of this setup.</p>
+</section>
+
+<section>
+  <h2>At a glance</h2>
+  <div class="facts">
+    <div class="fact"><b>85 / 300</b><span>cases with a converged mechanism: run succeeded and every gate passed</span></div>
+    <div class="fact"><b>167</b><span>cases with a barrier at all (85 converged + 82 diagnostic)</span></div>
+    <div class="fact"><b>4,274</b><span>agent turns, all completed; 0 timeouts, 0 errors</span></div>
+    <div class="fact"><b>112</b><span>run variants relaunched by agents; 19 succeeded, 5 converged</span></div>
+    <div class="fact"><b>45%</b><span>mean GPU utilization on the 300-node pilot, with one case per node (production: 94–96%)</span></div>
+    <div class="fact"><b>~5,000</b><span>node-hours charged over both pilots; tickets kept nodes busy for about 3,590 of them</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>What each case got</h2>
+  <div class="obar" id="obar" role="img" aria-label="Outcome of 300 cases"></div>
+  <div class="olegend" id="olegend"></div>
+  <ul>
+    <li><b>Converged</b> barriers: energetic span median 73.8 kJ/mol (range 48.6–97.5), standard error median 0.33 kJ/mol. 80 came from each case's original run (<code>kept-structure</code>), 5 from agent relaunches.</li>
+    <li><b>Diagnostic</b>: the run succeeded but failed at least one gate. Replicate profiles disagreed in 61 runs, the two string chains disagreed in 47, time slices in 14, coverage in 3, the covalent graph in 2 (a run can fail several).</li>
+    <li><b>Unfinished</b>: still active when the last pilot ended. 60 were in or waiting for the 4-node reaction-sampling stage, 13 still in light stages. 58 of the 73 were agent relaunches that started late.</li>
+    <li><b>No result</b>: every run failed and the agent deferred the case with a recorded next step. Most are umbrella windows that leave the reactive channel at the crest after 2 re-seeds (scientific refusal in reaction sampling); a few are repeated stalls in string relaxation.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Decisions over the run</h2>
+  <div class="chart" id="c-done">
+    <div class="hd"><h3>Cases closed by their agent, cumulative</h3><span class="sub">hours since the 300-node pilot started (19:26 UTC)</span></div>
+    <div class="legend"><span><i style="background:var(--o-conv)"></i>analyzed (a run succeeded)</span><span><i style="background:var(--o-none)"></i>deferred to a person</span></div>
+  </div>
+  <p>Agents closed a case only on a real outcome: every run succeeded (pass exit 0) or every run ended and needed a decision (exit 4). 225 of the 227 closures happened while a pilot was driving; the guard's final pass after the pilots ended decided 2 more with actions disabled. The 73 cases still active were recorded as unfinished.</p>
+</section>
+
+<section>
+  <h2>Nodes and GPUs</h2>
+  <div class="chart" id="c-busy">
+    <div class="hd"><h3>Nodes running a ticket</h3><span class="sub">10-minute bins</span></div>
+    <div class="legend"><span><i style="background:var(--s1)"></i>pilot 9105759 (300 nodes)</span><span><i style="background:var(--s2)"></i>pilot 9108129 (256 nodes)</span></div>
+  </div>
+  <div class="chart" id="c-gpu">
+    <div class="hd"><h3>Mean GPU utilization, nodes held by each pilot</h3><span class="sub">xpu-smi, tile 0 of each GPU, 10-minute bins</span></div>
+    <div class="legend"><span><i style="background:var(--s1)"></i>pilot 9105759</span><span><i style="background:var(--s2)"></i>pilot 9108129</span></div>
+  </div>
+  <ul>
+    <li><b>The 300-node pilot was full from start to end.</b> Tickets held 3,316 of its 3,556 node-hours (93%), and 2,894 of those were 4-node reaction-sampling tickets. At 01:30 UTC, 95 tickets were waiting for nodes.</li>
+    <li><b>The 256-node pilot never filled.</b> It started at 05:20 UTC, when 25 tickets were waiting, and cleared that queue within a minute. It peaked at 117 busy nodes and gave idle nodes back to PBS after 10 minutes. Tickets used 274 node-hours on it, but released nodes are still charged, so it cost about 1,450 node-hours (256 × 5.65 h). Queuing it as a backup was a mistake. After the 300-node pilot ended at 07:17 it carried on with the runs that had been cut off, until 10:58.</li>
+    <li><b>GPU use reflects the one-case-per-node setup.</b> 45% mean on the 300-node pilot, with 10-minute peaks of 74%; 28% on the 256-node pilot. A light-stage case held all 12 tiles of its node while using one, and each reaction-sampling ticket asked for 4 nodes under this release's sizing rule. Production packing reaches 94–96%.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>CPU and memory</h2>
+  <div class="grid2">
+    <div class="chart" id="c-cpu">
+      <div class="hd"><h3>Mean CPU busy per node</h3><span class="sub">204 CPUs per node, 5-minute samples</span></div>
+      <div class="legend"><span><i style="background:var(--s1)"></i>pilot 9105759</span><span><i style="background:var(--s2)"></i>pilot 9108129</span></div>
+    </div>
+    <div class="chart" id="c-mem">
+      <div class="hd"><h3>Mean memory used per node</h3><span class="sub">GiB of 1,134 GiB</span></div>
+      <div class="legend"><span><i style="background:var(--s1)"></i>pilot 9105759</span><span><i style="background:var(--s2)"></i>pilot 9108129</span></div>
+    </div>
+  </div>
+  <p>Sampling started 6 h into the run, when the logger was added (22,685 node samples over both pilots). CPU stayed between 4% and 6% and memory between 16 and 78 GiB per node, with about 3 Codex processes per node. The agents and Reactra's light stages leave the CPUs almost entirely free, which supports running many CPU-only agents off the GPU nodes.</p>
+</section>
+
+<section>
+  <h2>Agents</h2>
+  <div class="scroll"><table>
+    <thead><tr><th>Woken because</th><th class="n">Turns</th><th class="n">Median</th><th class="n">p90</th><th>Usual decision</th></tr></thead>
+    <tbody>
+      <tr><td>30-minute health check</td><td class="n">3,887</td><td class="n">73 s</td><td class="n">166 s</td><td>wait (3,887); retry a stalled run (47 retries overall)</td></tr>
+      <tr><td>Every run succeeded</td><td class="n">151</td><td class="n">140 s</td><td class="n">265 s</td><td>analyze and record a checkpoint</td></tr>
+      <tr><td>Runs ended, need an agent</td><td class="n">236</td><td class="n">279 s</td><td class="n">500 s</td><td>relaunch a variant (112) or defer (57)</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><b>Tokens:</b> 999M input (600M cached) and 11.5M output, median 97k input per turn. Drive250 used about half that in one hour; prod300 ran 12× longer, because agents were woken only on outcomes and every 30 minutes.</li>
+    <li><b>Actions through <code>act</code>:</b> 113 relaunches, 200 submits, 52 retries, 166 checkpoints. 102 cases were relaunched at least once, 20 retried. The caps (2 relaunches, 3 retries per case) held.</li>
+    <li><b>Passes:</b> the driver script ran 27,135 campaign passes, one per case every 5 minutes. Agents ran none, so no pass was cut short and no extra pilot was requested.</li>
+    <li><b>No unresolved or overridden decisions.</b> No agent tried to defer an active run, and no outcome repeated after a decision.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>What to change next time</h2>
+  <ul>
+    <li><b>Stop forcing one case per node.</b> Put cases where Reactra can pack them: one shared campaign or the reactra-hpc fleet runtime, so light stages share nodes (12 per node) and reactive sampling repacks onto full nodes.</li>
+    <li><b>Run agents off the GPU nodes.</b> One lightweight CPU-only agent per enzyme, each submitting into the same shared pilot pool. The driver design here (scripted passes, <code>act</code> with caps, blocked submit commands, guard) carries over unchanged.</li>
+    <li><b>Use the current release.</b> This run used a 17 Nov release; further packing improvements landed 18–21 Nov.</li>
+    <li><b>Don't queue backup pilots.</b> Released nodes are still charged for the whole request, so a backup that starts late costs its full size.</li>
+    <li><b>Look at the gate failures.</b> Replicate-profile and chain-agreement failures kept 82 finished cases from converging; more sampling or a third chain may convert many of them.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>All 300 cases</h2>
+  <div class="filters" id="filters" role="group" aria-label="Filter cases by outcome"></div>
+  <div class="tablebox"><table id="cases">
+    <thead><tr><th>Case</th><th>Outcome</th><th class="n">Span kJ/mol</th><th class="n">SE</th><th>Run</th><th class="n">Relaunches</th><th class="n">Retries</th><th>Failed gates</th></tr></thead>
+    <tbody></tbody>
+  </table></div>
+  <p class="sub" style="color:var(--muted);font-size:.82rem">Span for diagnostic runs is an estimate from a run that failed a gate. Data: <code>$MA/prod300/cases/*/reactra/summary/*.json</code>, <code>agent/</code>, <code>logs/</code>, and each pilot's <code>events.jsonl</code> and <code>telemetry/</code>.</p>
+</section>
+</main>
+
+<script>
+const D=/*DATA*/;
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const NS="http://www.w3.org/2000/svg";
+function el(t,a,p){const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e}
+function niceTicks(max,n){const step=[1,2,2.5,5,10].map(m=>m*Math.pow(10,Math.floor(Math.log10(max/n)))).find(s=>max/s<=n)||max;const t=[];for(let v=0;v<=max+1e-9;v+=step)t.push(+v.toFixed(6));return t}
+function chart(id,series,o){
+  const box=document.getElementById(id);const W=720,H=o.h||240,L=52,R=14,T=12,B=30;
+  const svg=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"c",role:"img","aria-label":o.label},null);box.appendChild(svg);
+  const xmax=o.xmax,ymax=o.ymax;const x=v=>L+(W-L-R)*v/xmax,y=v=>H-B-(H-T-B)*v/ymax;
+  for(const t of niceTicks(ymax,4)){el("line",{x1:L,x2:W-R,y1:y(t),y2:y(t),stroke:"var(--grid)","stroke-width":1},svg);const tx=el("text",{x:L-6,y:y(t)+4,"text-anchor":"end"},svg);tx.textContent=t+(o.yunit||"")}
+  for(let t=0;t<=xmax;t+=2){const tx=el("text",{x:x(t),y:H-8,"text-anchor":"middle"},svg);tx.textContent=t+"h"}
+  el("line",{x1:L,x2:W-R,y1:y(0),y2:y(0),stroke:"var(--line)","stroke-width":1},svg);
+  if(o.ref){el("line",{x1:L,x2:W-R,y1:y(o.ref.v),y2:y(o.ref.v),stroke:"var(--muted)","stroke-dasharray":"3 4","stroke-width":1},svg);const tx=el("text",{x:W-R,y:y(o.ref.v)-5,"text-anchor":"end"},svg);tx.textContent=o.ref.t}
+  series.forEach(s=>{if(!s.pts.length)return;const d=s.pts.map((p,i)=>(i?"L":"M")+x(p[0]).toFixed(1)+","+y(p[1]).toFixed(1)).join("");
+    if(s.step){let dd="";s.pts.forEach((p,i)=>{dd+=(i?"H"+x(p[0]).toFixed(1)+"V":"M"+x(p[0]).toFixed(1)+",")+y(p[1]).toFixed(1)});el("path",{d:dd,fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round"},svg)}
+    else el("path",{d,fill:"none",stroke:s.color,"stroke-width":2,"stroke-linejoin":"round","stroke-linecap":"round"},svg);
+    const last=s.pts[s.pts.length-1];el("circle",{cx:x(last[0]),cy:y(last[1]),r:3.5,fill:s.color,stroke:"var(--surface)","stroke-width":2},svg)});
+  // hover
+  const tip=document.createElement("div");tip.className="tip";tip.hidden=true;box.appendChild(tip);
+  const cross=el("line",{y1:T,y2:H-B,stroke:"var(--muted)","stroke-width":1,opacity:0},svg);
+  const hit=el("rect",{x:L,y:T,width:W-L-R,height:H-T-B,fill:"transparent"},svg);
+  function at(s,h){let best=null;for(const p of s.pts){if(s.step){if(p[0]<=h)best=p}else if(!best||Math.abs(p[0]-h)<Math.abs(best[0]-h))best=p}return best&&(s.step||Math.abs(best[0]-h)<0.25)?best:null}
+  function move(ev){const r=svg.getBoundingClientRect();const px=(ev.clientX-r.left)*W/r.width;const h=Math.max(0,Math.min(xmax,(px-L)/(W-L-R)*xmax));
+    const rows=series.map(s=>{const p=at(s,h);return p?`<span style="color:${s.color}">■</span> ${s.name}: ${o.fmt(p[1])}`:null}).filter(Boolean);
+    if(!rows.length){tip.hidden=true;cross.setAttribute("opacity",0);return}
+    cross.setAttribute("x1",x(h));cross.setAttribute("x2",x(h));cross.setAttribute("opacity",.6);
+    const hh=Math.floor(h),mm=Math.round((h-hh)*60);const clock=new Date(Date.UTC(2026,10,22,19,26)+h*3600e3).toISOString().slice(11,16);
+    tip.innerHTML=`${hh}h${String(mm).padStart(2,"0")} · ${clock} UTC<br>`+rows.join("<br>");tip.hidden=false;
+    const br=box.getBoundingClientRect();tip.style.left=Math.max(80,Math.min(br.width-80,ev.clientX-br.left))+"px";tip.style.top=(r.top-br.top+ (y(ymax*0.85))*r.height/H)+"px"}
+  hit.addEventListener("pointermove",move);hit.addEventListener("pointerleave",()=>{tip.hidden=true;cross.setAttribute("opacity",0)});
+}
+const C1="var(--s1)",C2="var(--s2)";
+const XMAX=16;
+chart("c-busy",[{name:"300-node pilot",color:C1,pts:D.busy["9105759"]},{name:"256-node pilot",color:C2,pts:D.busy["9108129"].filter(p=>p[0]>=9.9)}],{xmax:XMAX,ymax:320,label:"Nodes running a ticket over time",fmt:v=>v+" nodes",ref:{v:300,t:"300 nodes"}});
+chart("c-gpu",[{name:"300-node pilot",color:C1,pts:D.gpu["9105759"]},{name:"256-node pilot",color:C2,pts:D.gpu["9108129"]}],{xmax:XMAX,ymax:100,yunit:"%",label:"Mean GPU utilization over time",fmt:v=>v.toFixed(1)+"%"});
+chart("c-cpu",[{name:"300-node pilot",color:C1,pts:D.cpu.map(p=>[p[0],p[1]])},{name:"256-node pilot",color:C2,pts:D.cpu2.map(p=>[p[0],p[1]])}],{xmax:XMAX,ymax:20,yunit:"%",h:200,label:"Mean CPU busy per node",fmt:v=>v.toFixed(1)+"%"});
+chart("c-mem",[{name:"300-node pilot",color:C1,pts:D.cpu.map(p=>[p[0],p[2]])},{name:"256-node pilot",color:C2,pts:D.cpu2.map(p=>[p[0],p[2]])}],{xmax:XMAX,ymax:100,h:200,label:"Mean memory used per node",fmt:v=>v.toFixed(1)+" GiB"});
+function cum(kind){let n=0;const pts=[[0,0]];D.done.filter(d=>d[1]===kind).forEach(d=>{n++;pts.push([Math.min(d[0],XMAX),n])});pts.push([XMAX,n]);return pts}
+chart("c-done",[{name:"analyzed",color:"var(--o-conv)",pts:cum("analyzed"),step:true},{name:"deferred",color:"var(--o-none)",pts:cum("deferred"),step:true}],{xmax:XMAX,ymax:180,label:"Cases closed by their agent over time",fmt:v=>v+" cases"});
+// outcome bar
+const OUT=[["converged","Converged","var(--o-conv)","run succeeded, every gate passed"],["diagnostic","Diagnostic","var(--o-diag)","run succeeded, a gate failed"],["unfinished","Unfinished","var(--o-unf)","still active when the pilots ended"],["no result","No result","var(--o-none)","every run failed; deferred to a person"]];
+const cnt={};D.cases.forEach(c=>cnt[c[1]]=(cnt[c[1]]||0)+1);
+const ob=document.getElementById("obar"),ol=document.getElementById("olegend");
+OUT.forEach(([k,lab,col,desc])=>{const n=cnt[k]||0;const s=document.createElement("div");s.style.flexGrow=n;s.style.background=col;s.title=`${lab}: ${n}`;ob.appendChild(s);
+  const g=document.createElement("div");g.innerHTML=`<span class="sw" style="background:${col}"></span><span><b>${n}</b> ${lab}</span><span class="d">${desc}</span>`;ol.appendChild(g)});
+// table
+const tb=document.querySelector("#cases tbody");let filt="all";
+const pc={converged:"p-converged",diagnostic:"p-diagnostic",unfinished:"p-unfinished","no result":"p-none"};
+const order={converged:0,diagnostic:1,unfinished:2,"no result":3};
+const rows=D.cases.slice().sort((a,b)=>order[a[1]]-order[b[1]]||(a[2]??999)-(b[2]??999));
+function render(){tb.innerHTML=rows.filter(r=>filt==="all"||r[1]===filt).map(r=>`<tr><td><code>${r[0]}</code></td><td><span class="pill ${pc[r[1]]}">${r[1]}</span></td><td class="n">${r[2]??"–"}</td><td class="n">${r[3]??"–"}</td><td><code>${r[4]||"–"}</code></td><td class="n">${r[5]}</td><td class="n">${r[6]}</td><td>${r[8]&&r[1]==="diagnostic"?r[8].replace(/,/g,", "):""}</td></tr>`).join("")}
+const fb=document.getElementById("filters");
+[["all","All 300"],...OUT.map(o=>[o[0],`${o[1]} (${cnt[o[0]]||0})`])].forEach(([k,lab])=>{const b=document.createElement("button");b.type="button";b.id="f-"+k.replace(" ","-");b.textContent=lab;b.setAttribute("aria-pressed",k==="all");b.onclick=()=>{filt=k;fb.querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));render()};fb.appendChild(b)});
+render();
+</script>

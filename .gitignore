@@ -1,0 +1,8 @@
+logs/
+agents/
+groups/
+state/
+reactra/
+cases/
+.DS_Store
+__pycache__/

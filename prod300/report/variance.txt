@@ -1,0 +1,14 @@
+runs 300
+preparation {'n': 300, 'p10': 6.7, 'median': 8.0, 'p90': 8.6, 'max': 39.4, 'cv': 0.29, 'r_atoms': 0.19, 'r_cand': -0.01, 'r_attempts': -0.01, 'r_ops': -0.01, 'r_members': None, 'multi_attempt_runs': 0}
+classical_model {'n': 300, 'p10': 4.8, 'median': 7.3, 'p90': 12.8, 'max': 147.3, 'cv': 1.02, 'r_atoms': 0.39, 'r_cand': 0.07, 'r_attempts': 0.07, 'r_ops': 0.07, 'r_members': None, 'multi_attempt_runs': 0}
+classical_nvt {'n': 300, 'p10': 1.0, 'median': 1.3, 'p90': 2.6, 'max': 37.4, 'cv': 1.34, 'r_atoms': 0.5, 'r_cand': 0.05, 'r_attempts': 0.05, 'r_ops': 0.05, 'r_members': None, 'multi_attempt_runs': 0}
+classical_npt {'n': 300, 'p10': 5.4, 'median': 7.3, 'p90': 13.1, 'max': 213.0, 'cv': 1.38, 'r_atoms': 0.53, 'r_cand': 0.05, 'r_attempts': 0.05, 'r_ops': 0.05, 'r_members': None, 'multi_attempt_runs': 0}
+nac_sampling {'n': 300, 'p10': 0.0, 'median': 1.4, 'p90': 2.7, 'max': 43.8, 'cv': 1.65, 'r_atoms': 0.34, 'r_cand': -0.01, 'r_attempts': -0.01, 'r_ops': -0.01, 'r_members': None, 'multi_attempt_runs': 0}
+relaxed_near_attack {'n': 300, 'p10': 8.8, 'median': 11.6, 'p90': 14.6, 'max': 145.4, 'cv': 0.7, 'r_atoms': 0.46, 'r_cand': 0.06, 'r_attempts': 0.06, 'r_ops': 0.06, 'r_members': None, 'multi_attempt_runs': 0}
+reactive_model {'n': 300, 'p10': 1.2, 'median': 1.5, 'p90': 1.7, 'max': 3.5, 'cv': 0.2, 'r_atoms': 0.25, 'r_cand': -0.02, 'r_attempts': -0.02, 'r_ops': -0.02, 'r_members': None, 'multi_attempt_runs': 0}
+reactive_thermalization {'n': 300, 'p10': 17.3, 'median': 18.7, 'p90': 25.3, 'max': 52.3, 'cv': 0.23, 'r_atoms': 0.48, 'r_cand': 0.04, 'r_attempts': 0.04, 'r_ops': 0.04, 'r_members': None, 'multi_attempt_runs': 0}
+reaction_sampling {'n': 300, 'p10': 162.9, 'median': 212.5, 'p90': 337.5, 'max': 621.5, 'cv': 0.38, 'r_atoms': 0.15, 'r_cand': 0.01, 'r_attempts': 0.04, 'r_ops': 0.04, 'r_members': 0.1, 'multi_attempt_runs': 0}
+front_end_total 48.190838299999996 58.33186349166666 79.3229819 0.58 r_atoms 0.52 r_cand 0.05
+atoms p10/med/p90 1462 1614.0 1840
+candidates tried {4: 300}
+sampling members p10/med/p90 92 92 92

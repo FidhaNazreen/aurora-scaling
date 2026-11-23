@@ -1,0 +1,4 @@
+#!/bin/bash
+# Reactra controller at release ed519bc (20 Nov, last release before the reactra-hpc split; has the 18-20 Nov packing fixes).
+export PYTHONPATH=/lus/flare/projects/FRAME-IDP/dkastner/Projects/reactra-sweep/reactra-ed519bc/src${PYTHONPATH:+:$PYTHONPATH}
+exec /lus/flare/projects/FRAME-IDP/dkastner/Projects/reactra-sweep/venv-ed519bc/bin/python -c "import sys; from reactra.interfaces.cli import main; sys.argv[0]=\"reactra\"; sys.exit(main())" "$@"

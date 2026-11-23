@@ -1,0 +1,2 @@
+#!/bin/bash
+echo "refused in prod300: agents never touch PBS jobs"; exit 3

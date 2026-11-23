@@ -1,0 +1,43 @@
+#!/bin/bash
+# act: the agent's only way to change a case. Run from the case folder (the agent's cwd).
+#   act status                     case status, run summaries' next actions, last pass
+#   act relaunch NAME 'WHY'        new run variant NAME from the MECH + AroQ block; then edit its run.yaml
+#   act submit                     validate every run file offline, then submit the case (queues new runs)
+#   act retry RUN                  retry an ended or stalled run in place (Reactra --retry)
+#   act checkpoint ARGS...         mechagent case checkpoint . ARGS...
+# Caps per case: 2 relaunches, 3 retries. Changes need agent/.can-act (set by the driver while a pilot can run them).
+MA=/lus/flare/projects/FRAME-IDP/fkunnath/ma; D=$MA/prod300
+C=$(pwd -P); ACC=$(basename "$C"); [ -e "$C/task.json" ] && [ "$(dirname "$C")" = "$D/cases" ] || { echo "act: run me from a prod300 case folder"; exit 2; }
+source $MA/ma-env.sh >/dev/null; export MA_SITES=$D/sites.yaml MECHAGENT_REACTRA_SITES=$D/sites.yaml
+M=$MA/venv/bin/mechagent; R=$MA/venv/bin/reactra; A=$C/agent; mkdir -p $A
+note() { echo -e "$(date -u +%FT%TZ)\t$ACC\t$*" >> $D/logs/actions.tsv; }
+need_act() { [ -e $A/.can-act ] || { echo "act: actions are disabled now (no pilot time left to run them)"; exit 3; }; }
+case "${1:-}" in
+  status)
+    timeout 120 $M "case" status "$C" 2>&1 | tail -30
+    for s in "$C"/reactra/summary/*.json; do [ -e "$s" ] && python3 -c "import json,sys; j=json.load(open(sys.argv[1])); print(sys.argv[1].split('/')[-1], j.get('state'), 'next:', j.get('next_stage'), 'action:', json.dumps(j.get('next_action')))" "$s"; done
+    echo "--- last pass:"; cat "$C/last-pass.txt" 2>/dev/null
+    echo "relaunches used: $(ls $A/relaunch-* 2>/dev/null | wc -l)/2  retries used: $(ls $A/retry-* 2>/dev/null | wc -l)/3" ;;
+  relaunch)
+    need_act; NAME=${2:?act relaunch NAME WHY}; WHY=${3:?act relaunch NAME WHY}
+    [[ "$NAME" =~ ^[a-z0-9-]+$ ]] || { echo "act: NAME is lowercase letters, digits and hyphens"; exit 2; }
+    [ "$(ls $A/relaunch-* 2>/dev/null | wc -l)" -lt 2 ] || { echo "act: this case has used its 2 relaunches"; exit 3; }
+    T=$($M "case" status "$C" --select /task/sha256 | tr -d '"')
+    timeout 300 $M reactra init "$C" --name "$NAME" --hypothesis "$WHY" --expect-sha256 "$T" || exit 1
+    ( cd "$MA/repos/reactra-golden-2026-11-17j" && "$MA/venv/bin/python" "$MA/bin/ma-aroq-block.py" "$C/reactra/runs/$NAME/run.yaml" . ) >/dev/null || exit 1
+    echo "$WHY" > "$A/relaunch-$NAME"; note "relaunch\t$NAME\t$WHY"
+    echo "created $C/reactra/runs/$NAME/run.yaml: edit it (one evidence-backed change), then: act submit" ;;
+  submit)
+    need_act
+    for y in "$C"/reactra/runs/*/run.yaml; do timeout 300 $R validate --offline "$y" >/dev/null || { echo "act: $y fails validation:"; $R validate --offline "$y" 2>&1 | tail -15; exit 1; }; done
+    timeout 900 $M reactra submit "$C" 2>&1 | tail -15; rc=${PIPESTATUS[0]}; note "submit\trc=$rc"; exit $rc ;;
+  retry)
+    need_act; RUN=${2:?act retry RUN}
+    [ -d "$C/reactra/runs/$RUN" ] || { echo "act: no run $RUN in this case"; exit 2; }
+    [ "$(ls $A/retry-* 2>/dev/null | wc -l)" -lt 3 ] || { echo "act: this case has used its 3 retries"; exit 3; }
+    date -u +%FT%TZ > "$A/retry-$(date +%s)-$RUN"
+    timeout 900 $R campaign "$C/reactra/campaign.yaml" --retry "$RUN" 2>&1 | tail -15; rc=${PIPESTATUS[0]}; note "retry\t$RUN\trc=$rc"; exit $rc ;;
+  checkpoint)
+    shift; timeout 300 $M "case" checkpoint "$C" "$@"; rc=$?; note "checkpoint\trc=$rc"; exit $rc ;;
+  *) sed -n 2,9p "$0"; exit 2 ;;
+esac

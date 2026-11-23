@@ -1,0 +1,4 @@
+#!/bin/bash
+# Agent-side reactra: read-only commands only. Passes and campaign changes go through the dispatcher and act.
+case "$1" in campaign|run|resume|init|controllers|retain) echo "refused in pack256: 'reactra $1' changes runs; use act"; exit 3 ;; esac
+exec /lus/flare/projects/FRAME-IDP/fkunnath/ma/pack256/bin/reactra "$@"
