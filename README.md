@@ -17,6 +17,7 @@ One Reactra campaign per case, with agents on the GPU nodes through `hook.sh`.
 - `usage.sh`: logs CPU and memory on the pilot's nodes every 5 min.
 - `shims/`: block agents from `qsub`/`qdel`, `reactra campaign`, and similar commands.
 - `report/`: the results report, its data, and the plot scripts.
+- `launch/`: how the PBS job was launched: the site file, the pilot script Reactra generated, and a plain PBS equivalent. See `launch/README.md`.
 
 Results: 87 converged, 83 rough estimates, 73 still running, 57 failed. GPU about 45% busy, CPU about 4%. The main inefficiency was one campaign per case: Reactra only packs light stages onto shared nodes within one campaign.
 

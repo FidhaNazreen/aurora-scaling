@@ -1,0 +1,19 @@
+#!/bin/bash -l
+# For reading only: the prod300 pilot job written as one ordinary PBS script.
+# Reactra did not submit this file. It wrote job.sh and passed these settings on the
+# qsub command line (see README.md). The values come from sites.yaml (site aurora-prod300).
+#PBS -A FRAME-IDP
+#PBS -q prod
+#PBS -l select=300
+#PBS -l walltime=12:00:00
+#PBS -l filesystems=home:flare
+#PBS -l place=scatter
+#PBS -j oe
+
+R=/lus/flare/projects/FRAME-IDP/dkastner/Projects/reactra-sweep   # Reactra release 64b98b4
+POOL=/lus/flare/projects/FRAME-IDP/fkunnath/ma/prod300/reactra/pool
+
+# The pilot loop: holds all 300 nodes for 43,200 s (12 h) and runs the pool's tickets on them.
+# For each ticket it runs the node_setup steps from sites.yaml (modules, hook.sh) on that
+# ticket's nodes, then the ticket's own job.sh, through mpiexec.
+$R/venv-64b98b4/bin/python -I $POOL/pilots/<pilot-id>/campaign_pilot.py $POOL 43200 ''

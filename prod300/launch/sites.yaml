@@ -1,0 +1,38 @@
+# prod300: 300 CM cases on one 300-node, 12 h prod pilot, each driven by its own Codex SDK agent (drive.py) on its node.
+# Operator site file for MECHAGENT_REACTRA_SITES, used ON an Aurora login node (no ssh: line).
+# Deployment: Reactra golden-2026-11-17j (commit 64b98b4), deployed by dkastner with
+# tools/aurora/deploy_release.sh; read-only for us. Campaign stores go under our own root.
+archive: null          # Aurora Flare is the store; runs stay where they ran
+retries: 2
+sites:
+  aurora-prod300:
+    kind: aurora
+    account: FRAME-IDP
+    queue: prod             # routes to prod small: 256-1024 nodes, <=12 h
+    walltime: "12:00:00"
+    max_jobs: 1
+    pilot_nodes: 300     # one pilot for the whole run, 1 node per run
+    nodes_per_job: 1
+    heavy_nodes_per_run: 1
+    root: /lus/flare/projects/FRAME-IDP/fkunnath/ma/prod300/reactra   # own pool: only these pilots carry the driver hook
+    python: /lus/flare/projects/FRAME-IDP/dkastner/Projects/reactra-sweep/venv-64b98b4/bin/python
+    node_setup:
+      - module load frameworks/2026.1.0
+      - export ZE_FLAT_DEVICE_HIERARCHY=FLAT TMPDIR=/tmp
+      - bash /lus/flare/projects/FRAME-IDP/fkunnath/ma/prod300/hook.sh || true
+    environment: {OMP_NUM_THREADS: "8", HF_HUB_OFFLINE: "1", HF_HUB_DISABLE_TELEMETRY: "1"}
+    execution_profiles:
+      cofold: /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra/deployments/golden-2026-11-17j/mol1.yaml
+      boltz: /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra/candidates/mean-force-lab/engine-string/candidate-campaign-2f2bf76/boltz/profile.yaml
+      unfolded: /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra/deployments/golden-2026-11-17j/unfolded.yaml
+      solution: /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra/deployments/golden-2026-11-17j/solution.yaml
+      prepared: /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra/deployments/golden-2026-11-17j/prepared.yaml
+    assets:
+      - /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra/assets
+      - /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra-Boltz-Aurora-qualification-20261004-v1/.reactra/assets/boltz-2/boltz2_conf.ckpt
+      - /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra-Boltz-Aurora-qualification-20261004-v1/.reactra/assets/boltz-2/mols.tar
+      - /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra-Aurora-stack-20261004-v1/reactra/.reactra/assets/espaloma-0.3.2.pt
+      - /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra-Aurora-stack-20261004-v1/reactra/.pixi/envs/parameterization/lib/python3.11/site-packages/propka/propka.cfg
+      - /lus/flare/projects/FRAME-IDP/dkastner/Projects/reactra-sweep/reactra-64b98b4/src/reactra/data
+    deployment_assets:
+      hydration-assets.json: /lus/flare/projects/FRAME-IDP/dkastner/Projects/Reactra-AroQ-from-start-20261009-v2/hydration-assets.aurora.json
