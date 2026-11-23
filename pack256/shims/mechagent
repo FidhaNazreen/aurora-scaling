@@ -1,3 +1,0 @@
-#!/bin/bash
-case "$1" in reactra) echo "refused in pack256: mechagent reactra runs passes or submits; use act"; exit 3 ;; esac
-exec /lus/flare/projects/FRAME-IDP/fkunnath/ma/venv/bin/mechagent "$@"

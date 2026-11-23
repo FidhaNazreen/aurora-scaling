@@ -1,2 +1,0 @@
-#!/bin/bash
-echo "refused in pack256: agents never touch PBS jobs"; exit 3
