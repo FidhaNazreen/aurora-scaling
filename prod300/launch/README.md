@@ -39,6 +39,3 @@ qsub -A FRAME-IDP -q prod \
 5. The pilot stops claiming tickets 30 min before the walltime. It releases nodes that sit idle for 10 min.
 6. At the end it writes a summary to `pbs.log`: busy fraction, tickets, exits and GPU telemetry.
 
-## Known issue
-
-`hook.sh` picks the first node with `${PALS_RANKID:-${PMI_RANK:-0}}`. Aurora's launcher uses PMIx, which sets `PMIX_RANK` rather than `PMI_RANK`. If `PALS_RANKID` were also missing, every node would fall back to rank 0 and start its own agent. A safer check is `${PALS_RANKID:-${PMIX_RANK:-${PMI_RANK:-0}}}`. The script here is unchanged from what ran.
